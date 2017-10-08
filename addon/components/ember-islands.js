@@ -74,12 +74,27 @@ function queryIslandComponents() {
 function lookupComponent(owner, name) {
   let componentLookupKey = `component:${name}`;
   let layoutLookupKey = `template:components/${name}`;
-  let layout = owner._lookupFactory(layoutLookupKey);
-  let component = owner._lookupFactory(componentLookupKey);
+  let layout;
+  let component;
+
+  if (owner.factoryFor) {
+    let maybeLayout = owner.factoryFor(layoutLookupKey);
+    layout = maybeLayout && maybeLayout.class;
+    let maybeComponent = owner.factoryFor(componentLookupKey);
+    component = maybeComponent && maybeComponent.class;
+  } else {
+    layout = owner._lookupFactory(layoutLookupKey);
+    component = owner._lookupFactory(componentLookupKey);
+  }
 
   if (layout && !component) {
     owner.register(componentLookupKey, Component);
-    component = owner._lookupFactory(componentLookupKey);
+    if (owner.factoryFor) {
+      let maybeComponent = owner.factoryFor(componentLookupKey);
+      component = maybeComponent && maybeComponent.class;
+    } else {
+      component = owner._lookupFactory(componentLookupKey);
+    }
   }
 
   return { component, layout };
